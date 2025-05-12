@@ -20,6 +20,16 @@ void interface(void)
     }
 }
 
+int check_bkg(char *input){
+    int background=0;
+    if(input[strlen(input)-1]=='&'){
+        background= -1;
+        input[strlen(input)-1]='\0';//&제거
+        input[strcspn(input, " \t\r\n")]=0; //공백제거(끝 다듬기), strcspn 공백, \t \r \n까지 길이 구해서 해당 문자 위치 찾기
+    }
+    return background;
+}
+
 void cd(char *input)
 {
     if (strncpy(input, "cd", 3) == 0)
@@ -39,7 +49,7 @@ void pwd(char *input)
     }
 }
 
-void exec(char *input)
+void exec(char *input, int bkg)
 {
     // 외부 명령어.
     pid_t pid = fork(); // ProcessID of fork(child) 호출
@@ -61,6 +71,8 @@ void exec(char *input)
     }else if (pid > 0){ // fork return parent process or child's PID
         // 부모process
         waitpid(pid, NULL, 0); // child exit까지 대기
+        if(!bkg) waitpid(pid, NULL, 0);
+        else prinf("백그라운드 실행 : pid=%d\n", pid);
     }else perror("fork"); // fork return -1: fail
 }
 
@@ -94,18 +106,12 @@ void pipeline(char *input){
                 close(pipefd[1]);
             }
 
-            //명령어 파싱
-            char *argv[100];
-            char *arg = strtok(cmds[i], "\t\n");
-            int j=0;
-            while(arg != NULL){
-                argv[j]=arg;
-                j++;
-                arg=strtok(NULL, "\t\n");
-            }
-            argv[j]=NULL;
-
-            execvp(argv[0], argv);
+            int bkg=check_bkg(input);
+            if(strncmp(input, "cd ", 3) == 0){
+                cd(input);
+            }else if(strcmp(input, "pwd") == 0){
+                pwd(input);
+            }else exec(input, bkg);
             perror("execvp");
             exit(1);
         }else{
@@ -132,6 +138,9 @@ int main(void)
 
         if (fgets(input, maxline, stdin) == NULL) break;// 한줄 입력
         input[strcspn(input, "\n")] = 0; // strcount stop not : 개행 제거
+
+        int bkg=check_bkg(input);
+
         if (strcmp(input, "exit") == 0) // exit나오면 탈출
         {
             break;
@@ -141,14 +150,9 @@ int main(void)
             cd(input);
         }else if(strcmp(input, "pwd") == 0){
             pwd(input);
-        }else exec(input);
+        }else exec(input, bkg);
 
-        int background=0;
-        if(input[strlen(input)-1]=='&'){
-            background= -1;
-            input[strlen(input)-1]='\0';//&제거
-            input[strcspn(input, " \t\r\n")]=0; //공백제거(끝 다듬기), strcspn 공백, \t \r \n까지 길이 구해서 해당 문자 위치 찾기
-        }
+        
 
     }
     return 0;
