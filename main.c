@@ -10,11 +10,16 @@ int main(void){
 
     while(1){
         char cwd[1024];//cwd 쉘에 표시
-        getcwd(cwd, sizeof(cwd));
-
         char *usrname = getenv("USER"); //get USERname environment
+        char hostname[1024];
+        getcwd(cwd, sizeof(cwd));
+        gethostname(hostname, sizeof(hostname));//HOSTNAME
 
         printf("%s@%s", username, cwd);
+
+        if (usrname != NULL){
+            printf("%s@%s:%s$", usrname, hostname, cwd);
+        }
         
 
         if (fgets(input, maxline, stdin))==NULL break;//한줄 입력
