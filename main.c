@@ -156,7 +156,7 @@ void multi_cmds(char *input, int bkg){
         if(next_seq && (!next || next_seq < next)) { next = next_seq; type = 0;}
 
         if(next) *next = '\0';//공백 제거
-        while(input==' ')input++;
+        while(*input==' ')input++;
         if(*input){
             int bkg = check_bkg(input);
             if(strchr(input, '|')) pipeline(input);
