@@ -1,0 +1,12 @@
+CC = gcc #컴파일러지정
+CFLAGS = -Wall -g #경고모두표시, 디버그
+TARGET = test #실행파일
+SRCS = main.c #소스파일(컴파일 할)
+
+all: $(TARGET)
+
+$(TARGET): $(SRCS)
+	$(CC) $(CFLAGS) -o $(TARGET) $(SRCS)
+
+clean:
+	rm -f $(TARGET) 
