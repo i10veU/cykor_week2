@@ -106,12 +106,9 @@ void pipeline(char *input){
                 close(pipefd[1]);
             }
 
-            int bkg=check_bkg(input);
-            if(strncmp(input, "cd ", 3) == 0){
-                cd(input);
-            }else if(strcmp(input, "pwd") == 0){
-                pwd(input);
-            }else exec(input, bkg);
+            int bkg=check_bkg(cmds[i]);
+            run(cmds[i], bkg);
+
             perror("execvp");
             exit(1);
         }else{
@@ -127,6 +124,29 @@ void pipeline(char *input){
 
     for(int i=0; i<cmd_count; i++) wait(NULL);
 }
+
+void multi_cmds(char *input, int bkg){
+    int last_status = 0;
+    while(*input){
+        char *next;
+
+        //&&
+        if((next=strstr(input, "&&")) != NULL){
+            *next = '\0';
+            last_status = 
+        }
+    }
+}
+
+void run(char *input, int bkg){
+    if(strchr(input, '|') != NULL){//find pipeline(char)
+        pipeline(input);
+    }else if(strncmp(input, "cd ", 3) == 0){
+        cd(input);
+    }else if(strcmp(input, "pwd") == 0){
+        pwd(input);
+    }else exec(input, bkg);
+};
 
 int main(void)
 {
@@ -144,15 +164,9 @@ int main(void)
         if (strcmp(input, "exit") == 0) // exit나오면 탈출
         {
             break;
-        }else if(strchr(input, '|') != NULL){//find pipeline(char)
-            pipeline(input);
-        }else if(strncmp(input, "cd ", 3) == 0){
-            cd(input);
-        }else if(strcmp(input, "pwd") == 0){
-            pwd(input);
-        }else exec(input, bkg);
+        }
 
-        
+        run(input, bkg);
 
     }
     return 0;
