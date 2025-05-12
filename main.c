@@ -7,6 +7,8 @@
 
 #define maxline 1024
 
+int run(char *input, int bkg);
+
 void interface(void)
 {
     char cwd[1024];                 // cwd 쉘에 표시
