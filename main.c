@@ -48,7 +48,8 @@ int main(void){
             char *token = strtok(input, " ");//input을 " "(공백) 기준으로 parsing
             int i = 0;
             while(token != NULL){
-                args[i++] = token;
+                args[i] = token;
+                i += 1;
                 token = strtok(NULL, " ");
             }
             args[i] = NULL;
