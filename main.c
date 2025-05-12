@@ -143,6 +143,13 @@ int main(void)
             pwd(input);
         }else exec(input);
 
+        int background=0;
+        if(input[strlen(input)-1]=='&'){
+            background= -1;
+            input[strlen(input)-1]='\0';//&제거
+            input[strcspn(input, " \t\r\n")]=0; //공백제거(끝 다듬기), strcspn 공백, \t \r \n까지 길이 구해서 해당 문자 위치 찾기
+        }
+
     }
     return 0;
 }
