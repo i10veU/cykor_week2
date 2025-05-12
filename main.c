@@ -30,26 +30,28 @@ int check_bkg(char *input){
     return background;
 }
 
-void cd(char *input)
+int cd(char *input)
 {
     if (strncpy(input, "cd", 3) == 0)
     {                           // 입력 cd 확인, strcpy와 달리 3으로 제한해 overflow 방지
         char *path = input + 3; // 경로 추출
         if (chdir(path) != 0) // dir 변경 시도 경로 맞으면 0, 틀리면 -1 : 절대/상대경로 모두 가능
             perror("cd"); // error message
+        else return 0;
     }
 }
 
-void pwd(char *input)
+int pwd(char *input)
 {
     if (strcmp(input, "pwd") == 0){ // strncpy보다 효율적, strcpy+if로 에러 컨트롤 하는 것보다 수월
         char cwd[1024];  
         getcwd(cwd, sizeof(cwd));
         printf("%s\n", cwd);
+        return 0;
     }
 }
 
-void exec(char *input, int bkg)
+int exec(char *input, int bkg)
 {
     // 외부 명령어.
     pid_t pid = fork(); // ProcessID of fork(child) 호출
@@ -68,11 +70,13 @@ void exec(char *input, int bkg)
 
         execvp(args[0], args); // execute progrmm with path (e.g., ls, cat, echo)
         exit(1);               // child exit
+        return 0;
     }else if (pid > 0){ // fork return parent process or child's PID
         // 부모process
         waitpid(pid, NULL, 0); // child exit까지 대기
         if(!bkg) waitpid(pid, NULL, 0);
         else prinf("백그라운드 실행 : pid=%d\n", pid);
+        return 0;
     }else perror("fork"); // fork return -1: fail
 }
 
@@ -126,22 +130,37 @@ void pipeline(char *input){
 }
 
 void multi_cmds(char *input, int bkg){
-    int last_status = 0;
+    int last_status = -1;
     while(*input){
-        char *next;
+        char *next_and = strstr(input, "&&");
+        char *next_or = strstr(input, "||");
+        char *next_seq = strstr(input, ";");
 
-        //&&
-        if((next=strstr(input, "&&")) != NULL){
-            *next = '\0';
-            last_status = 
+        char *next = NULL;
+        int type = 0; // 0:;, 1:&&, 2:||
+
+        if(next_and && (!next || next_and < next)) { next = next_and; type = 1;}
+        if(next_or && (!next || next_or < next)) { next = next_or; type = 1;}
+        if(next_seq && (!next || next_seq < next)) { next = next_seq; type = 1;}
+
+        if(next) *next = '\0';//공백 제거
+        while(input==' ')input++;
+        if(*input){
+            int bkg = check_bkg(input);
+            if(strchr(input, '|')) pipeline(input);
+            else last_status = run(input, bkg);
         }
+
+        if(!next) break;//더 없음
+
+        input = next + (type == 0? 1:2);
+        if(type==1 && last_status==-1) break;
+        if(type==2 && last_status==0) break;
     }
 }
 
-void run(char *input, int bkg){
-    if(strchr(input, '|') != NULL){//find pipeline(char)
-        pipeline(input);
-    }else if(strncmp(input, "cd ", 3) == 0){
+int run(char *input, int bkg){
+    if(strncmp(input, "cd ", 3) == 0){
         cd(input);
     }else if(strcmp(input, "pwd") == 0){
         pwd(input);
@@ -164,7 +183,9 @@ int main(void)
         if (strcmp(input, "exit") == 0) // exit나오면 탈출
         {
             break;
-        }
+        }else if(strchr(input, '|') != NULL){//find pipeline(char)
+            pipeline(input);
+        }else run(input, bkg);
 
         run(input, bkg);
 
