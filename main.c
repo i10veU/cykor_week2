@@ -36,9 +36,29 @@ int main(void){
         }
 
         //PastWorkingDirectory
-        if(strcmp(input, "pwd")==0){ //strncpy보다 효율적, strcpy+if로 에러 컨트롤 하는 것보다 수월월
+        if(strcmp(input, "pwd")==0){ //strncpy보다 효율적, strcpy+if로 에러 컨트롤 하는 것보다 수월
             printf("%s\n", cwd);
         }
+
+        //외부 명령어.
+        pid_t pid = fork(); //ProcessID of fork(child) 호출
+        if(pid == 0){ // fork return 0: child process inner memory
+            //자식process
+            char *args[1024];
+            char *token = strtok(input, " ");//input을 " "(공백) 기준으로 parsing
+            int i = 0;
+            while(token != NULL){
+                args[i++] = token;
+                token = strtok(NULL, " ");
+            }
+            args[i] = NULL;
+
+            execvp(args[0], args); // execute progrmm with path (e.g., ls, cat, echo)
+            exit(1); // child exit
+        }else if(pid>0){ // fork return parent process or child's PID
+            //부모process
+            waitpid(pid, NULL, 0);//child exit까지 대기
+        }else perror("fork");// fork return -1: fail
 
     }
     return 0;
