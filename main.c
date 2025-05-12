@@ -64,6 +64,64 @@ void exec(char *input)
     }else perror("fork"); // fork return -1: fail
 }
 
+void pipeline(char *input){
+    char *cmds[10]; // 최대 10개 파이프라인
+    int cmd_count = 0;
+
+    // 명령어 pipeline 기준 파싱
+    char *token = strtok(input, "|");
+    while(token != NULL && cmd_count < 10){
+        cmds[cmd_count] = token;
+        cmd_count += 1;
+        token = strtok(NULL, "|");
+    }
+
+    int prev_fd = -1;//pipefd[0] save
+
+    for(int i=0; i<cmd_count; i++){
+        int pipefd[2];//pipefd[0]: read, pipefd[1]: write
+        if(i<cmd_count) pipe(pipefd);//다음 명령과 연결될 새 파이프 생성
+
+        pid_t pid = fork();
+        if(pid==0){
+            if(prev_fd != -1){
+                dup2(prev_fd, 0);//이전 파이프 읽기 > stdin
+                close(prev_fd);
+            }
+            if(i<cmd_count){
+                close(pipefd[0]);//다음 파이프 읽기 close
+                dup2(pipefd[1], 1);//쓰기 > stdout
+                close(pipefd[1]);
+            }
+
+            //명령어 파싱
+            char *argv[100];
+            char *arg = strtok(cmds[i], "\t\n");
+            int j=0;
+            while(arg != NULL){
+                argv[j]=arg;
+                j++;
+                arg=strtok(NULL, "\t\n");
+            }
+            argv[j]=NULL;
+
+            execvp(argv[0], argv);
+            perror("execvp");
+            exit(1);
+        }else{
+            if(prev_fd!=-1){
+                close(prev_fd);//이전 파이프 읽기 close
+            }
+            if(i<cmd_count){
+                close(pipefd[1]);//write close
+                prev_fd = pipefd[0];//다음 fd 저장
+            }
+        }
+    }
+
+    for(int i=0; i<cmd_count; i++) wait(NULL);
+}
+
 int main(void)
 {
     char input[maxline];
@@ -74,8 +132,16 @@ int main(void)
 
         if (fgets(input, maxline, stdin) == NULL) break;// 한줄 입력
         input[strcspn(input, "\n")] = 0; // strcount stop not : 개행 제거
-        if (strcmp(input, "exit") == 0)break; // exit나오면 탈출
-
+        if (strcmp(input, "exit") == 0) // exit나오면 탈출
+        {
+            break;
+        }else if(strchr(input, '|') != NULL){//find pipeline(char)
+            pipeline(input);
+        }else if(strncmp(input, "cd ", 3) == 0){
+            cd(input);
+        }else if(strcmp(input, "pwd") == 0){
+            pwd(input);
+        }else exec(input);
 
     }
     return 0;
