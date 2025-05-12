@@ -186,9 +186,6 @@ int main(void)
         }else if(strchr(input, '|') != NULL){//find pipeline(char)
             pipeline(input);
         }else run(input, bkg);
-
-        run(input, bkg);
-
     }
     return 0;
 }
