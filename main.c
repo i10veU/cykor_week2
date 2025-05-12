@@ -198,7 +198,7 @@ int main(void)
         if (strcmp(input, "exit") == 0) // exit나오면 탈출
         {
             break;
-        }else if(strchr(input, ';') || strchr(input, '&&') || strchr(input, '||')){
+        }else if(strchr(input, ';') || strstr(input, "&&") || strstr(input, "||")){
             multi_cmds(input, bkg);
         }else if(strchr(input, '|') != NULL){//find pipeline(char)
             pipeline(input);
