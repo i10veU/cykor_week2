@@ -140,8 +140,8 @@ void multi_cmds(char *input, int bkg){
         int type = 0; // 0:;, 1:&&, 2:||
 
         if(next_and && (!next || next_and < next)) { next = next_and; type = 1;}
-        if(next_or && (!next || next_or < next)) { next = next_or; type = 1;}
-        if(next_seq && (!next || next_seq < next)) { next = next_seq; type = 1;}
+        if(next_or && (!next || next_or < next)) { next = next_or; type = 2;}
+        if(next_seq && (!next || next_seq < next)) { next = next_seq; type = 0;}
 
         if(next) *next = '\0';//공백 제거
         while(input==' ')input++;
