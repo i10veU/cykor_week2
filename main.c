@@ -161,10 +161,12 @@ void multi_cmds(char *input, int bkg){
 
 int run(char *input, int bkg){
     if(strncmp(input, "cd ", 3) == 0){
-        cd(input);
+        return cd(input);
     }else if(strcmp(input, "pwd") == 0){
-        pwd(input);
-    }else exec(input, bkg);
+        return pwd(input);
+    }else {
+        return exec(input, bkg);
+    }
 };
 
 int main(void)
