@@ -35,7 +35,11 @@ int main(void){
             continue;
         }
 
-    }
+        //PastWorkingDirectory
+        if(strcmp(input, "pwd")==0){ //strncpy보다 효율적, strcpy+if로 에러 컨트롤 하는 것보다 수월월
+            printf("%s\n", cwd);
+        }
 
+    }
     return 0;
 }
