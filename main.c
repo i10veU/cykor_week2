@@ -35,20 +35,27 @@ int cd(char *input)
     if (strncpy(input, "cd", 3) == 0)
     {                           // 입력 cd 확인, strcpy와 달리 3으로 제한해 overflow 방지
         char *path = input + 3; // 경로 추출
-        if (chdir(path) != 0) // dir 변경 시도 경로 맞으면 0, 틀리면 -1 : 절대/상대경로 모두 가능
+        if (chdir(path) != 0){ // dir 변경 시도 경로 맞으면 0, 틀리면 -1 : 절대/상대경로 모두 가능
             perror("cd"); // error message
-        else return 0;
+            return -1;
+        }else return 0;
     }
+    return -1;
 }
 
 int pwd(char *input)
 {
     if (strcmp(input, "pwd") == 0){ // strncpy보다 효율적, strcpy+if로 에러 컨트롤 하는 것보다 수월
         char cwd[1024];  
-        getcwd(cwd, sizeof(cwd));
-        printf("%s\n", cwd);
-        return 0;
+        if(getcwd(cwd, sizeof(cwd))!=NULL){
+            printf("%s\n", cwd);
+            return 0;
+        }else{
+            perror("pwd");
+            return -1;
+        }
     }
+    return -1;
 }
 
 int exec(char *input, int bkg)
@@ -69,14 +76,17 @@ int exec(char *input, int bkg)
         args[i] = NULL;
 
         execvp(args[0], args); // execute progrmm with path (e.g., ls, cat, echo)
+        perror("execvp1");
         exit(1);               // child exit
-        return 0;
     }else if (pid > 0){ // fork return parent process or child's PID
         // 부모process
         if(!bkg) waitpid(pid, NULL, 0);// child exit까지 대기
         else printf("백그라운드 실행 : pid=%d\n", pid);
         return 0;
-    }else perror("fork"); // fork return -1: fail
+    }else {
+        perror("fork"); // fork return -1: fail
+        return -1;
+    }
 }
 
 void pipeline(char *input){
@@ -112,7 +122,7 @@ void pipeline(char *input){
             int bkg=check_bkg(cmds[i]);
             run(cmds[i], bkg);
 
-            perror("execvp");
+            perror("execvp2 pipe");
             exit(1);
         }else{
             if(prev_fd!=-1){
@@ -149,6 +159,7 @@ void multi_cmds(char *input, int bkg){
             if(strchr(input, '|')) pipeline(input);
             else last_status = run(input, bkg);
         }
+        perror("multi");
 
         if(!next) break;//더 없음
 
