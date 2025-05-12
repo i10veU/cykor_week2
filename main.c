@@ -74,7 +74,7 @@ int exec(char *input, int bkg)
     }else if (pid > 0){ // fork return parent process or child's PID
         // 부모process
         if(!bkg) waitpid(pid, NULL, 0);// child exit까지 대기
-        else prinf("백그라운드 실행 : pid=%d\n", pid);
+        else printf("백그라운드 실행 : pid=%d\n", pid);
         return 0;
     }else perror("fork"); // fork return -1: fail
 }
